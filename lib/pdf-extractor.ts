@@ -1,8 +1,6 @@
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import { Document } from "@langchain/core/documents"
-import { AdvancedSkillExtractor } from "./advanced-skill-extractor"
-import { BulletproofSkillExtractor } from "./bulletproof-skill-extractor"
 import { Embeddings } from "@langchain/core/embeddings"
 
 // PDF parsing using proper PDF library for accurate text extraction
@@ -497,6 +495,16 @@ async function extractStructuredDataWithRAG(text: string, vectorStore: MemoryVec
       }
     })
 
+    // Strategy 1.5: Special Python detection (bulletproof)
+    const pythonPatterns = ['python', 'Python', 'PYTHON', 'python3', 'Python 3', 'py']
+    const lowerText = text.toLowerCase()
+    pythonPatterns.forEach(pattern => {
+      if (lowerText.includes(pattern.toLowerCase()) && !foundSkills.has('Python')) {
+        foundSkills.add('Python')
+        console.log(`🐍 Special Python detection found: ${pattern}`)
+      }
+    })
+
     // Strategy 2: Flexible matching for compound terms and variations
     const flexiblePatterns = [
       { pattern: /power\s*bi|powerbi/gi, skill: 'Power BI' },
@@ -524,6 +532,15 @@ async function extractStructuredDataWithRAG(text: string, vectorStore: MemoryVec
     flexiblePatterns.forEach(({ pattern, skill }) => {
       if (pattern.test(text)) {
         foundSkills.add(skill)
+      }
+    })
+
+    // Strategy 2.5: Critical skills case-insensitive includes (bulletproof)
+    const criticalSkills = ['Python', 'JavaScript', 'Java', 'React', 'SQL', 'HTML', 'CSS', 'Django', 'Flask']
+    criticalSkills.forEach(skill => {
+      if (lowerText.includes(skill.toLowerCase()) && !foundSkills.has(skill)) {
+        foundSkills.add(skill)
+        console.log(`🎯 Critical skill found (includes): ${skill}`)
       }
     })
 
@@ -568,7 +585,15 @@ async function extractStructuredDataWithRAG(text: string, vectorStore: MemoryVec
       })
     })
 
-    const foundSkillsArray = Array.from(foundSkills)
+    // Enhance with bulletproof extraction if few skills found
+    let foundSkillsArray = Array.from(foundSkills)
+    if (foundSkillsArray.length < 3) {
+      console.log("⚠️ Few skills found, enhancing with bulletproof extraction...")
+      const enhancedSkills = enhancedSkillExtraction(text)
+      const mergedSkills = new Set([...foundSkillsArray, ...enhancedSkills])
+      foundSkillsArray = Array.from(mergedSkills)
+      console.log(`🔧 Enhanced from ${foundSkills.size} to ${foundSkillsArray.length} skills`)
+    }
 
     console.log(`🔍 Skills extraction: Found ${foundSkillsArray.length} skills from ${skillKeywords.length} possible skills`)
     console.log(`📋 Extracted skills: ${foundSkillsArray.slice(0, 10).join(', ')}${foundSkillsArray.length > 10 ? '...' : ''}`)
@@ -847,88 +872,55 @@ function extractKeyAchievements(text: string): string[] {
 
 // REMOVED: generateBasicStructuredData - No fallback to sample data
 
-// Advanced extraction function using multi-agent system
-export async function extractTextFromFileAdvanced(file: File, jobContext?: any): Promise<ExtractedResume> {
-  console.log(`🚀 Starting ADVANCED extraction for: ${file.name}`)
+// Enhanced skill extraction function with bulletproof Python detection
+function enhancedSkillExtraction(text: string): string[] {
+  console.log("🔧 Enhanced skill extraction with bulletproof Python detection...")
 
-  try {
-    // First extract using existing method
-    const basicExtraction = await extractTextFromFile(file)
+  const skills = new Set<string>()
 
-    // Then enhance with advanced skill extraction
-    console.log("🤖 Enhancing with advanced multi-agent skill extraction...")
-    const advancedExtractor = new AdvancedSkillExtractor()
-    const advancedSkills = await advancedExtractor.extractSkills(basicExtraction.text, jobContext)
+  // Critical skills that must be detected
+  const criticalSkills = [
+    'Python', 'JavaScript', 'Java', 'C#', 'C++', 'PHP', 'Ruby', 'Go', 'TypeScript',
+    'React', 'Angular', 'Vue', 'Node.js', 'Django', 'Flask', 'Spring',
+    'HTML', 'CSS', 'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis',
+    'AWS', 'Azure', 'Docker', 'Git', 'Machine Learning', 'Deep Learning'
+  ]
 
-    // Merge results with enhanced skills
-    const enhancedExtraction: ExtractedResume = {
-      ...basicExtraction,
-      extractedData: {
-        ...basicExtraction.extractedData,
-        skills: advancedSkills.skills,
-        programmingLanguages: advancedSkills.programmingLanguages,
-        frameworks: advancedSkills.frameworks,
-        tools: advancedSkills.tools,
-        databases: advancedSkills.databases,
-        softSkills: advancedSkills.softSkills,
-        certifications: advancedSkills.certifications
-      },
-      metadata: {
-        ...basicExtraction.metadata,
-        advancedExtraction: true,
-        extractionMethod: advancedSkills.extractionMethod,
-        confidence: advancedSkills.confidence
-      }
+  const lowerText = text.toLowerCase()
+
+  // Method 1: Case-insensitive includes (most reliable for Python)
+  criticalSkills.forEach(skill => {
+    if (lowerText.includes(skill.toLowerCase())) {
+      skills.add(skill)
+      console.log(`✅ Enhanced extraction found: ${skill}`)
     }
+  })
 
-    console.log(`✅ Advanced extraction completed for ${file.name}`)
-    console.log(`📊 Enhanced skills: ${advancedSkills.skills.length} total, confidence: ${advancedSkills.confidence}%`)
-    console.log(`🎯 Skills breakdown: ${advancedSkills.programmingLanguages.length} languages, ${advancedSkills.frameworks.length} frameworks, ${advancedSkills.tools.length} tools`)
-
-    // Double-check with bulletproof extractor if few skills found
-    if (advancedSkills.skills.length < 3) {
-      console.log("🛡️ Few skills found, double-checking with bulletproof extractor...")
-      const bulletproofExtractor = new BulletproofSkillExtractor()
-      const bulletproofResult = bulletproofExtractor.extract(basicExtraction.text)
-
-      if (bulletproofResult.skills.length > advancedSkills.skills.length) {
-        console.log(`🔧 Bulletproof found more skills (${bulletproofResult.skills.length} vs ${advancedSkills.skills.length}), merging results...`)
-        const mergedSkills = new Set([...advancedSkills.skills, ...bulletproofResult.skills])
-        enhancedExtraction.extractedData.skills = Array.from(mergedSkills)
-        enhancedExtraction.metadata.confidence = Math.max(advancedSkills.confidence, bulletproofResult.confidence)
-      }
+  // Method 2: Special Python variations
+  const pythonVariations = ['python', 'Python', 'PYTHON', 'python3', 'Python 3', 'py']
+  pythonVariations.forEach(variation => {
+    if (lowerText.includes(variation.toLowerCase()) && !skills.has('Python')) {
+      skills.add('Python')
+      console.log(`✅ Enhanced extraction found Python (variation: ${variation})`)
     }
+  })
 
-    return enhancedExtraction
+  // Method 3: Context-based detection for Python
+  const pythonContexts = [
+    /experience\s+(?:with|in|using)\s+python/gi,
+    /developed?\s+(?:with|using|in)\s+python/gi,
+    /programming\s+languages?[:\s]+[^.]*python/gi,
+    /skills?[:\s]+[^.]*python/gi
+  ]
 
-  } catch (error) {
-    console.error(`❌ Advanced extraction failed for ${file.name}, falling back to bulletproof:`, error)
-
-    try {
-      // Fallback to bulletproof extractor
-      const basicExtraction = await extractTextFromFile(file)
-      const bulletproofExtractor = new BulletproofSkillExtractor()
-      const bulletproofResult = bulletproofExtractor.extract(basicExtraction.text)
-
-      const fallbackExtraction: ExtractedResume = {
-        ...basicExtraction,
-        extractedData: {
-          ...basicExtraction.extractedData,
-          skills: bulletproofResult.skills
-        },
-        metadata: {
-          ...basicExtraction.metadata,
-          extractionMethod: 'bulletproof-fallback',
-          confidence: bulletproofResult.confidence
-        }
-      }
-
-      console.log(`🛡️ Bulletproof fallback found ${bulletproofResult.skills.length} skills`)
-      return fallbackExtraction
-
-    } catch (fallbackError) {
-      console.error(`❌ Bulletproof fallback also failed, using basic extraction:`, fallbackError)
-      return await extractTextFromFile(file)
+  pythonContexts.forEach(pattern => {
+    if (pattern.test(text) && !skills.has('Python')) {
+      skills.add('Python')
+      console.log(`✅ Enhanced extraction found Python (context)`)
     }
-  }
+  })
+
+  const result = Array.from(skills)
+  console.log(`🔧 Enhanced extraction found ${result.length} skills: ${result.join(', ')}`)
+  return result
 }
