@@ -18,7 +18,6 @@ class PatternBasedAgent implements ExtractionAgent {
     console.log("🔍 Pattern-Based Agent: Extracting skills using regex patterns...")
     console.log(`📝 Text length: ${text.length} characters`)
     console.log(`📄 Text preview: ${text.substring(0, 500)}...`)
-<<<<<<< HEAD
 
     const skills = new Set<string>()
 
@@ -26,15 +25,6 @@ class PatternBasedAgent implements ExtractionAgent {
     const skillKeywords = [
       // Programming Languages
       'JavaScript', 'Python', 'Java', 'C#', 'C++', 'C', 'PHP', 'Ruby', 'Go', 'Rust',
-=======
-    
-    const skills = new Set<string>()
-    
-    // Comprehensive skill patterns
-    const skillKeywords = [
-      // Programming Languages
-      'JavaScript', 'Python', 'Java', 'C#', 'C++', 'C', 'PHP', 'Ruby', 'Go', 'Rust', 
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       'TypeScript', 'Swift', 'Kotlin', 'Scala', 'R', 'MATLAB', 'Perl', 'Shell', 'Bash', 'PowerShell',
       
       // Web Technologies
@@ -87,28 +77,17 @@ class PatternBasedAgent implements ExtractionAgent {
     const criticalSkills = ['Python', 'JavaScript', 'Java', 'React', 'Node.js', 'SQL', 'HTML', 'CSS', 'Django', 'Flask']
     console.log("🔍 Strategy 1b: Enhanced critical skills detection...")
     let criticalCount = 0
-<<<<<<< HEAD
 
     criticalSkills.forEach(skill => {
       let found = false
 
-=======
-    
-    criticalSkills.forEach(skill => {
-      let found = false
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Method 1: Case-insensitive includes (most reliable)
       if (text.toLowerCase().includes(skill.toLowerCase())) {
         skills.add(skill)
         found = true
         console.log(`✅ Found critical skill (includes): ${skill}`)
       }
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Method 2: Loose regex without word boundaries
       if (!found) {
         const looseRegex = new RegExp(skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
@@ -118,11 +97,7 @@ class PatternBasedAgent implements ExtractionAgent {
           console.log(`✅ Found critical skill (loose regex): ${skill}`)
         }
       }
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Method 3: Check for variations and common misspellings
       if (!found) {
         const variations: Record<string, string[]> = {
@@ -132,11 +107,7 @@ class PatternBasedAgent implements ExtractionAgent {
           'React': ['react', 'REACT', 'ReactJS', 'React.js'],
           'SQL': ['sql', 'SQL', 'Sql']
         }
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
         const skillVariations = variations[skill] || []
         for (const variation of skillVariations) {
           if (text.toLowerCase().includes(variation.toLowerCase())) {
@@ -147,11 +118,7 @@ class PatternBasedAgent implements ExtractionAgent {
           }
         }
       }
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       if (found) criticalCount++
     })
     console.log(`📊 Strategy 1b found ${criticalCount} critical skills`)
@@ -231,11 +198,7 @@ class ContextualAgent implements ExtractionAgent {
   async extract(text: string): Promise<string[]> {
     console.log("🧠 Contextual Agent: Extracting skills using context analysis...")
     console.log(`📝 Text length: ${text.length} characters`)
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     const skills = new Set<string>()
     
     // Look for skills mentioned with experience context
@@ -308,7 +271,6 @@ class ContextualAgent implements ExtractionAgent {
     // Comprehensive known skills list
     const knownSkills = [
       // Programming Languages
-<<<<<<< HEAD
       'JavaScript', 'Python', 'Java', 'C#', 'C++', 'C', 'PHP', 'Ruby', 'Go', 'Rust',
       'TypeScript', 'Swift', 'Kotlin', 'Scala', 'R', 'MATLAB', 'Perl', 'Shell', 'Bash',
 
@@ -324,23 +286,6 @@ class ContextualAgent implements ExtractionAgent {
       // Cloud & DevOps
       'AWS', 'Azure', 'Google Cloud', 'GCP', 'Docker', 'Kubernetes', 'Jenkins', 'Git',
 
-=======
-      'JavaScript', 'Python', 'Java', 'C#', 'C++', 'C', 'PHP', 'Ruby', 'Go', 'Rust', 
-      'TypeScript', 'Swift', 'Kotlin', 'Scala', 'R', 'MATLAB', 'Perl', 'Shell', 'Bash',
-      
-      // Frontend
-      'React', 'Angular', 'Vue.js', 'Vue', 'HTML', 'CSS', 'Bootstrap', 'Tailwind',
-      
-      // Backend
-      'Node.js', 'Django', 'Flask', 'Spring', 'Express.js', 'Laravel', 'Ruby on Rails',
-      
-      // Databases
-      'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'SQLite', 'Oracle', 'SQL Server', 'SQL',
-      
-      // Cloud & DevOps
-      'AWS', 'Azure', 'Google Cloud', 'GCP', 'Docker', 'Kubernetes', 'Jenkins', 'Git',
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Data & AI
       'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch', 'Pandas', 'NumPy',
       'Power BI', 'Tableau', 'Data Visualization', 'Analytics', 'AI', 'ML'
@@ -387,32 +332,20 @@ class SemanticAgent implements ExtractionAgent {
   async extract(text: string, context?: any): Promise<string[]> {
     console.log("🤖 Semantic Agent: Using Gemini AI for semantic skill extraction...")
     console.log(`📝 Text length: ${text.length} characters`)
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     try {
       const prompt = this.buildSemanticPrompt(text, context)
       console.log("📤 Sending request to Gemini API...")
       const response = await this.callGeminiAPI(prompt)
       console.log(`📥 Received response: ${response.substring(0, 200)}...`)
       const skills = this.parseGeminiResponse(response)
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       console.log(`✅ Semantic Agent found ${skills.length} skills: ${skills.join(', ')}`)
       return skills
     } catch (error) {
       console.error("❌ Semantic Agent failed:", error)
       console.log("🔄 Falling back to basic pattern matching...")
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Fallback to basic pattern matching if Gemini fails
       const fallbackSkills = this.fallbackExtraction(text)
       console.log(`🔄 Fallback found ${fallbackSkills.length} skills: ${fallbackSkills.join(', ')}`)
