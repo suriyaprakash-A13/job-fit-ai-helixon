@@ -26,10 +26,6 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
   // Calculate stats
   const totalCandidates = results.length
   const topCandidates = Math.min(results.length, 4)
-  const averageScore =
-    results.length > 0
-      ? Math.round((results.reduce((sum, r) => sum + r.recommendation_score, 0) / results.length) * 10) / 10
-      : 0
 
   const downloadResults = () => {
     const csv = [
@@ -89,7 +85,7 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-4xl font-bold text-blue-600">{totalCandidates}</div>
@@ -100,12 +96,6 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
           <CardContent className="p-6 text-center">
             <div className="text-4xl font-bold text-green-600">{topCandidates}</div>
             <div className="text-sm text-gray-600 mt-1">Top Candidates</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-purple-600">{averageScore}</div>
-            <div className="text-sm text-gray-600 mt-1">Average Score</div>
           </CardContent>
         </Card>
         <Card>
