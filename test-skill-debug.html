@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Extraction Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        textarea { width: 100%; height: 200px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .results { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .skill-list { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+        .skill-tag { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .found { background: #d4edda; color: #155724; }
+        .missing { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 Skill Extraction Debug Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Resume Text</h2>
+            <textarea id="resumeText" placeholder="Paste resume text here...">
+John Doe
+Software Engineer
+Email: john.doe@email.com
+Phone: +1-555-123-4567
+
+TECHNICAL SKILLS:
+• Programming Languages: Python, JavaScript, Java, TypeScript
+• Frontend Frameworks: React, Angular, Vue.js
+• Backend Technologies: Node.js, Django, Flask, Express.js
+• Databases: PostgreSQL, MongoDB, Redis, MySQL
+• Cloud Platforms: AWS, Azure, Google Cloud
+• DevOps Tools: Docker, Kubernetes, Jenkins
+• Version Control: Git, GitHub
+• Areas of Technical Interest: Machine Learning, Deep Learning, LLMs, Data Visualization
+
+PROFESSIONAL EXPERIENCE:
+Senior Software Engineer | TechCorp Inc. | 2020 - Present
+• Developed scalable web applications using React and Node.js
+• Implemented machine learning models using Python and TensorFlow
+• Managed cloud infrastructure on AWS with Docker containers
+• Led a team of 5 developers in agile development practices
+
+Software Developer | StartupXYZ | 2018 - 2020
+• Built REST APIs using Django and PostgreSQL
+• Created data visualization dashboards with Power BI
+• Worked with microservices architecture and Kubernetes
+• 3+ years of experience in full-stack development
+
+EDUCATION:
+Bachelor of Science in Computer Science
+University of Technology (2014-2018)
+
+CERTIFICATIONS:
+• AWS Certified Solutions Architect
+• Google Cloud Professional Developer
+• Scrum Master Certification
+            </textarea>
+            
+            <button onclick="testSkillExtraction()">🧪 Test Skill Extraction</button>
+            <button onclick="testAdvancedExtraction()">🤖 Test Advanced Extraction</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div id="results" class="test-section" style="display: none;">
+            <h2>📊 Test Results</h2>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testSkillExtraction() {
+            const resumeText = document.getElementById('resumeText').value;
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            if (!resumeText.trim()) {
+                alert('Please enter resume text');
+                return;
+            }
+
+            resultsContent.innerHTML = '<div class="info">🔄 Testing skill extraction...</div>';
+            resultsDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/debug-skills', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ resumeText })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResults(result.debug, result.recommendations);
+                } else {
+                    resultsContent.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultsContent.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdvancedExtraction() {
+            const resumeText = document.getElementById('resumeText').value;
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            if (!resumeText.trim()) {
+                alert('Please enter resume text');
+                return;
+            }
+
+            resultsContent.innerHTML = '<div class="info">🔄 Testing advanced extraction...</div>';
+            resultsDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/extract-skills-advanced', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ resumeText })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayAdvancedResults(result.data);
+                } else {
+                    resultsContent.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultsContent.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayResults(debug, recommendations) {
+            const html = `
+                <div class="results">
+                    <h3>📄 Text Analysis</h3>
+                    <p><strong>Length:</strong> ${debug.textLength} characters</p>
+                    <p><strong>Preview:</strong> ${debug.textPreview}...</p>
+                </div>
+
+                <div class="results">
+                    <h3>🧪 Simple Regex Test</h3>
+                    <p><strong>Found:</strong> ${debug.simpleRegexResults.count} skills</p>
+                    <div class="skill-list">
+                        ${debug.simpleRegexResults.found.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+
+                <div class="results">
+                    <h3>🔍 Case-Insensitive Test</h3>
+                    <p><strong>Found:</strong> ${debug.includesResults.count} skills</p>
+                    <div class="skill-list">
+                        ${debug.includesResults.found.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+
+                <div class="results">
+                    <h3>🤖 Advanced Extractor Test</h3>
+                    <p><strong>Found:</strong> ${debug.advancedResults.count} skills</p>
+                    <p><strong>Confidence:</strong> ${debug.advancedResults.confidence}%</p>
+                    <div class="skill-list">
+                        ${debug.advancedResults.skills.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <h4>📊 Categorized Skills</h4>
+                    <p><strong>Programming Languages:</strong> ${debug.advancedResults.programmingLanguages.join(', ') || 'None'}</p>
+                    <p><strong>Frameworks:</strong> ${debug.advancedResults.frameworks.join(', ') || 'None'}</p>
+                    <p><strong>Tools:</strong> ${debug.advancedResults.tools.join(', ') || 'None'}</p>
+                </div>
+
+                <div class="results">
+                    <h3>💡 Recommendations</h3>
+                    ${recommendations.map(rec => `<p>${rec}</p>`).join('')}
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function displayAdvancedResults(data) {
+            const html = `
+                <div class="results">
+                    <h3>🤖 Advanced Multi-Agent Extraction Results</h3>
+                    <p><strong>Total Skills:</strong> ${data.skills.length}</p>
+                    <p><strong>Confidence:</strong> ${data.confidence}%</p>
+                    <p><strong>Method:</strong> ${data.extractionMethod}</p>
+                    
+                    <h4>📊 All Skills Found</h4>
+                    <div class="skill-list">
+                        ${data.skills.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <h4>🔧 Programming Languages</h4>
+                    <div class="skill-list">
+                        ${data.programmingLanguages.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <h4>⚡ Frameworks</h4>
+                    <div class="skill-list">
+                        ${data.frameworks.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <h4>🛠️ Tools</h4>
+                    <div class="skill-list">
+                        ${data.tools.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <h4>🗄️ Databases</h4>
+                    <div class="skill-list">
+                        ${data.databases.map(skill => 
+                            `<span class="skill-tag found">${skill}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function clearResults() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('resultsContent').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

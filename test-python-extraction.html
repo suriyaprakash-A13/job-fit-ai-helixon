@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Skill Extraction Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        textarea { width: 100%; height: 150px; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; }
+        button { padding: 12px 24px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        button.success { background: #28a745; }
+        button.danger { background: #dc3545; }
+        .results { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0; border-left: 4px solid #007bff; }
+        .skill-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .skill-tag { background: #e9ecef; padding: 6px 12px; border-radius: 20px; font-size: 14px; border: 1px solid #dee2e6; }
+        .found { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .missing { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .python-found { background: #28a745; color: white; font-weight: bold; }
+        .python-missing { background: #dc3545; color: white; font-weight: bold; }
+        .test-case { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 6px; background: white; }
+        .test-case h4 { margin: 0 0 10px 0; color: #333; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .loading { color: #6c757d; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐍 Python Skill Extraction Test Suite</h1>
+        <p class="info">This comprehensive test will verify that Python skills are being extracted correctly from resumes.</p>
+        
+        <div class="test-section">
+            <h2>📝 Custom Resume Text Test</h2>
+            <textarea id="customText" placeholder="Paste your resume text here to test Python extraction...">
+John Doe
+Senior Software Engineer
+Email: john.doe@email.com
+Phone: +1-555-123-4567
+
+TECHNICAL SKILLS:
+• Programming Languages: Python, JavaScript, Java, TypeScript
+• Backend Frameworks: Django, Flask, FastAPI
+• Frontend: React, HTML, CSS
+• Databases: PostgreSQL, MongoDB, Redis
+• Cloud: AWS, Docker, Kubernetes
+• Data Science: Pandas, NumPy, Scikit-learn
+
+PROFESSIONAL EXPERIENCE:
+Senior Software Engineer | TechCorp Inc. | 2020 - Present
+• Developed scalable web applications using Python and Django
+• Built machine learning models with Python and TensorFlow
+• Created REST APIs using Python Flask
+• Managed cloud infrastructure on AWS with Docker containers
+
+Software Developer | DataCorp | 2018 - 2020
+• Built data processing pipelines using Python
+• Developed analytics dashboards with Python and Power BI
+• Worked with Python libraries like Pandas and NumPy
+• 3+ years of Python development experience
+
+EDUCATION:
+Bachelor of Science in Computer Science
+University of Technology (2014-2018)
+
+PROJECTS:
+• E-commerce Platform: Built using Python Django and React
+• ML Recommendation System: Developed with Python and scikit-learn
+• Data Visualization Tool: Created using Python and Matplotlib
+            </textarea>
+            
+            <div style="margin: 15px 0;">
+                <button onclick="testCustomText()">🧪 Test Custom Text</button>
+                <button onclick="testBulletproof()" class="success">🛡️ Test Bulletproof Extractor</button>
+                <button onclick="testAdvanced()" style="background: #6f42c1;">🤖 Test Advanced Extractor</button>
+                <button onclick="clearResults()" class="danger">🗑️ Clear Results</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Predefined Test Cases</h2>
+            <button onclick="runAllTests()">🚀 Run All Test Cases</button>
+            <div id="predefinedTests"></div>
+        </div>
+
+        <div id="results" class="test-section" style="display: none;">
+            <h2>📊 Test Results</h2>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const testCases = [
+            {
+                name: "Simple Python Mention",
+                text: "I have 5 years of experience with Python programming.",
+                expectedPython: true
+            },
+            {
+                name: "Skills List Format",
+                text: "Technical Skills: Python, JavaScript, React, Node.js, SQL",
+                expectedPython: true
+            },
+            {
+                name: "Bullet Points",
+                text: "• Programming Languages: Python, Java, C++\n• Web Technologies: HTML, CSS, JavaScript",
+                expectedPython: true
+            },
+            {
+                name: "Experience Context",
+                text: "Developed web applications using Python and Django framework for 3 years.",
+                expectedPython: true
+            },
+            {
+                name: "Different Cases",
+                text: "PYTHON programming language, python scripting, Python development",
+                expectedPython: true
+            },
+            {
+                name: "Python with Version",
+                text: "Python 3.9, Python3, Python 2.7 experience",
+                expectedPython: true
+            },
+            {
+                name: "No Python",
+                text: "JavaScript, Java, C#, React, Node.js, HTML, CSS",
+                expectedPython: false
+            },
+            {
+                name: "Real Resume Format",
+                text: `
+John Smith
+Data Scientist
+
+SKILLS:
+Programming: Python, R, SQL
+Machine Learning: TensorFlow, PyTorch, Scikit-learn
+Data Analysis: Pandas, NumPy, Matplotlib
+
+EXPERIENCE:
+Data Scientist | AI Corp | 2019-Present
+• Built predictive models using Python and scikit-learn
+• Developed data pipelines with Python and Apache Spark
+• Created visualizations using Python matplotlib and seaborn
+                `,
+                expectedPython: true
+            }
+        ];
+
+        async function testCustomText() {
+            const text = document.getElementById('customText').value;
+            if (!text.trim()) {
+                alert('Please enter some text to test');
+                return;
+            }
+            
+            showResults();
+            document.getElementById('resultsContent').innerHTML = '<div class="loading">🔄 Testing custom text...</div>';
+            
+            await runSingleTest("Custom Text", text, true);
+        }
+
+        async function testBulletproof() {
+            const text = document.getElementById('customText').value;
+            if (!text.trim()) {
+                alert('Please enter some text to test');
+                return;
+            }
+            
+            showResults();
+            document.getElementById('resultsContent').innerHTML = '<div class="loading">🔄 Testing with bulletproof extractor...</div>';
+            
+            try {
+                const response = await fetch('/api/test-bulletproof', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resumeText: text })
+                });
+                
+                const result = await response.json();
+                displayBulletproofResults(result);
+            } catch (error) {
+                document.getElementById('resultsContent').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdvanced() {
+            const text = document.getElementById('customText').value;
+            if (!text.trim()) {
+                alert('Please enter some text to test');
+                return;
+            }
+            
+            showResults();
+            document.getElementById('resultsContent').innerHTML = '<div class="loading">🔄 Testing with advanced extractor...</div>';
+            
+            try {
+                const response = await fetch('/api/extract-skills-advanced', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resumeText: text })
+                });
+                
+                const result = await response.json();
+                displayAdvancedResults(result);
+            } catch (error) {
+                document.getElementById('resultsContent').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function runAllTests() {
+            showResults();
+            document.getElementById('resultsContent').innerHTML = '<div class="loading">🔄 Running all test cases...</div>';
+            
+            let html = '<h3>🧪 Predefined Test Cases Results</h3>';
+            let passCount = 0;
+            
+            for (let i = 0; i < testCases.length; i++) {
+                const testCase = testCases[i];
+                html += `<div class="test-case">`;
+                html += `<h4>Test ${i + 1}: ${testCase.name}</h4>`;
+                html += `<p><strong>Expected Python:</strong> ${testCase.expectedPython ? '✅ Yes' : '❌ No'}</p>`;
+                
+                try {
+                    const response = await fetch('/api/test-bulletproof', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ resumeText: testCase.text })
+                    });
+                    
+                    const result = await response.json();
+                    const pythonFound = result.bulletproofResult.pythonFound;
+                    const passed = pythonFound === testCase.expectedPython;
+                    
+                    if (passed) passCount++;
+                    
+                    html += `<div class="test-result ${passed ? 'success' : 'error'}">`;
+                    html += `<strong>Result:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} - `;
+                    html += `Python ${pythonFound ? 'Found' : 'Not Found'} `;
+                    html += `(${result.bulletproofResult.skills.length} total skills)`;
+                    html += `</div>`;
+                    
+                    if (result.bulletproofResult.skills.length > 0) {
+                        html += `<div class="skill-list">`;
+                        result.bulletproofResult.skills.forEach(skill => {
+                            const isPython = skill.toLowerCase().includes('python');
+                            html += `<span class="skill-tag ${isPython ? 'python-found' : 'found'}">${skill}</span>`;
+                        });
+                        html += `</div>`;
+                    }
+                    
+                } catch (error) {
+                    html += `<div class="test-result error">❌ ERROR: ${error.message}</div>`;
+                }
+                
+                html += `</div>`;
+                
+                // Update progress
+                document.getElementById('resultsContent').innerHTML = html + `<div class="loading">Progress: ${i + 1}/${testCases.length} tests completed...</div>`;
+            }
+            
+            html += `<div class="results">`;
+            html += `<h3>📊 Summary</h3>`;
+            html += `<p><strong>Tests Passed:</strong> ${passCount}/${testCases.length}</p>`;
+            html += `<p><strong>Success Rate:</strong> ${Math.round((passCount / testCases.length) * 100)}%</p>`;
+            html += `</div>`;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function displayBulletproofResults(result) {
+            const html = `
+                <div class="results">
+                    <h3>🛡️ Bulletproof Extractor Results</h3>
+                    <div class="test-result ${result.bulletproofResult.pythonFound ? 'success' : 'error'}">
+                        <strong>Python Detection:</strong> ${result.bulletproofResult.pythonFound ? '✅ FOUND' : '❌ NOT FOUND'}
+                    </div>
+                    <p><strong>Total Skills:</strong> ${result.bulletproofResult.skills.length}</p>
+                    <p><strong>Confidence:</strong> ${result.bulletproofResult.confidence}%</p>
+                    <p><strong>Method:</strong> ${result.bulletproofResult.method}</p>
+                    
+                    <h4>🎯 Skills Found</h4>
+                    <div class="skill-list">
+                        ${result.bulletproofResult.skills.map(skill => {
+                            const isPython = skill.toLowerCase().includes('python');
+                            return `<span class="skill-tag ${isPython ? 'python-found' : 'found'}">${skill}</span>`;
+                        }).join('')}
+                    </div>
+                    
+                    <h4>🔍 Debug Information</h4>
+                    <p><strong>Found by includes:</strong> ${result.bulletproofResult.debug.foundByIncludes.length}</p>
+                    <p><strong>Found by regex:</strong> ${result.bulletproofResult.debug.foundByRegex.length}</p>
+                    <p><strong>Found by variations:</strong> ${result.bulletproofResult.debug.foundByVariations.length}</p>
+                    
+                    <h4>💡 Recommendations</h4>
+                    ${result.recommendations.map(rec => `<p>${rec}</p>`).join('')}
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function displayAdvancedResults(result) {
+            const pythonFound = result.data.skills.includes('Python');
+            const html = `
+                <div class="results">
+                    <h3>🤖 Advanced Multi-Agent Extractor Results</h3>
+                    <div class="test-result ${pythonFound ? 'success' : 'error'}">
+                        <strong>Python Detection:</strong> ${pythonFound ? '✅ FOUND' : '❌ NOT FOUND'}
+                    </div>
+                    <p><strong>Total Skills:</strong> ${result.data.skills.length}</p>
+                    <p><strong>Confidence:</strong> ${result.data.confidence}%</p>
+                    <p><strong>Method:</strong> ${result.data.extractionMethod}</p>
+                    
+                    <h4>🎯 All Skills Found</h4>
+                    <div class="skill-list">
+                        ${result.data.skills.map(skill => {
+                            const isPython = skill.toLowerCase().includes('python');
+                            return `<span class="skill-tag ${isPython ? 'python-found' : 'found'}">${skill}</span>`;
+                        }).join('')}
+                    </div>
+                    
+                    <h4>📊 Categorized Skills</h4>
+                    <p><strong>Programming Languages:</strong> ${result.data.programmingLanguages.join(', ') || 'None'}</p>
+                    <p><strong>Frameworks:</strong> ${result.data.frameworks.join(', ') || 'None'}</p>
+                    <p><strong>Tools:</strong> ${result.data.tools.join(', ') || 'None'}</p>
+                    <p><strong>Databases:</strong> ${result.data.databases.join(', ') || 'None'}</p>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function showResults() {
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function clearResults() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('resultsContent').innerHTML = '';
+        }
+
+        // Auto-run a quick test on page load
+        window.onload = function() {
+            console.log('🐍 Python Extraction Test Suite loaded');
+            console.log('Use the buttons above to test Python skill extraction');
+        };
+    </script>
+</body>
+</html>
