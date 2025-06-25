@@ -3,7 +3,6 @@
  * This system uses multiple specialized agents to extract skills more accurately
  */
 
-<<<<<<< HEAD
 import {
   PatternBasedAgent,
   ContextualAgent,
@@ -11,15 +10,6 @@ import {
   InferenceAgent,
   ValidationAgent,
   type ExtractionAgent
-=======
-import { 
-  PatternBasedAgent, 
-  ContextualAgent, 
-  SemanticAgent, 
-  InferenceAgent, 
-  ValidationAgent,
-  type ExtractionAgent 
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
 } from './extraction-agents'
 import { BulletproofSkillExtractor } from './bulletproof-skill-extractor'
 
@@ -84,11 +74,7 @@ class AdvancedSkillExtractor {
 
     // Consensus and validation phase
     const consensusSkills = this.buildConsensus(results, confidenceScores)
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     // Enhanced fallback system
     let finalSkills = consensusSkills
     if (consensusSkills.length === 0) {
@@ -101,21 +87,13 @@ class AdvancedSkillExtractor {
       console.log("⚠️ Few skills found, enhancing with bulletproof extractor...")
       const bulletproofExtractor = new BulletproofSkillExtractor()
       const bulletproofResult = bulletproofExtractor.extract(resumeText)
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Merge results, avoiding duplicates
       const enhancedSkills = new Set([...consensusSkills, ...bulletproofResult.skills])
       finalSkills = Array.from(enhancedSkills)
       console.log(`🔧 Enhanced from ${consensusSkills.length} to ${finalSkills.length} skills`)
     }
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     // Categorize skills
     const categorizedSkills = this.categorizeSkills(finalSkills)
     
@@ -123,11 +101,7 @@ class AdvancedSkillExtractor {
     const overallConfidence = this.calculateOverallConfidence(agentResults)
 
     // Extract additional metadata
-<<<<<<< HEAD
-    const detailedAnalysis = await this.performDetailedAnalysis(resumeText, consensusSkills)
-=======
     const detailedAnalysis = await this.performDetailedAnalysis(resumeText, finalSkills)
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
 
     console.log(`🎯 Advanced extraction complete: ${finalSkills.length} skills with ${overallConfidence}% confidence`)
 
@@ -154,11 +128,7 @@ class AdvancedSkillExtractor {
       const confidence = confidenceScores[agentName] || 0
       console.log(`📊 ${agentName}: ${skills.length} skills, confidence: ${confidence}`)
       console.log(`   Skills: ${skills.join(', ')}`)
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       skills.forEach(skill => {
         const normalizedSkill = this.normalizeSkill(skill)
         if (!skillVotes[normalizedSkill]) {
@@ -313,11 +283,7 @@ class AdvancedSkillExtractor {
   private emergencyFallback(text: string): string[] {
     console.log("🚨 Emergency fallback: Using simple regex extraction...")
     const skills = new Set<string>()
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     // Most common skills that should always be detected
     const criticalSkills = [
       'Python', 'JavaScript', 'Java', 'C#', 'C++', 'PHP', 'Ruby', 'Go', 'TypeScript',
