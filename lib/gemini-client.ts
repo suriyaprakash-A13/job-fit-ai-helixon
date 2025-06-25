@@ -58,7 +58,7 @@ class GeminiClient {
   private baseUrl: string
 
   constructor() {
-    this.apiKey = process.env.GOOGLE_API_KEY || "AIzaSyCgaFzMltN282Qq0PF0oG6eGzayQciLWNs"
+    this.apiKey = "AIzaSyCgaFzMltN282Qq0PF0oG6eGzayQciLWNs"
     this.baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
   }
 
