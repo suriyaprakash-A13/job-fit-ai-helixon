@@ -20,34 +20,74 @@ export class BulletproofSkillExtractor {
     // Programming Languages (most important)
     'Python', 'JavaScript', 'Java', 'C#', 'C++', 'C', 'PHP', 'Ruby', 'Go', 'Rust',
     'TypeScript', 'Swift', 'Kotlin', 'Scala', 'R', 'MATLAB', 'Perl', 'Shell', 'Bash',
-    
+    'PowerShell', 'Objective-C', 'Dart', 'Elixir', 'Haskell', 'Clojure', 'F#', 'VB.NET',
+
     // Web Technologies
     'HTML', 'CSS', 'React', 'Angular', 'Vue', 'Node.js', 'jQuery', 'Bootstrap',
-    
+    'Sass', 'SCSS', 'Webpack', 'Babel', 'Next.js', 'Nuxt.js', 'Svelte', 'Tailwind CSS',
+    'Material-UI', 'Ant Design', 'Chakra UI', 'Styled Components',
+
     // Backend Frameworks
-    'Django', 'Flask', 'Spring', 'Express', 'Laravel', 'Rails',
-    
+    'Django', 'Flask', 'Spring', 'Express', 'Laravel', 'Rails', 'FastAPI', 'ASP.NET',
+    'Spring Boot', 'Struts', 'CodeIgniter', 'Symfony', 'CakePHP',
+
     // Databases
     'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'SQLite', 'Oracle',
-    
+    'SQL Server', 'Cassandra', 'DynamoDB', 'Neo4j', 'InfluxDB', 'CouchDB',
+    'MariaDB', 'Elasticsearch', 'Solr', 'Firebase',
+
     // Cloud & DevOps
-    'AWS', 'Azure', 'Docker', 'Kubernetes', 'Git', 'Jenkins',
-    
+    'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Git', 'Jenkins',
+    'GitHub', 'GitLab', 'CI/CD', 'Terraform', 'Ansible', 'Chef', 'Puppet',
+    'Vagrant', 'Helm', 'Istio', 'Prometheus', 'Grafana', 'Nagios',
+
     // Data & AI
     'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch', 'Pandas', 'NumPy',
-    'Power BI', 'Tableau', 'Analytics'
+    'Power BI', 'Tableau', 'Analytics', 'Scikit-learn', 'Keras', 'OpenCV', 'NLTK',
+    'Spark', 'Hadoop', 'Kafka', 'Airflow', 'MLflow', 'Jupyter', 'Data Mining',
+
+    // Mobile Development
+    'iOS', 'Android', 'React Native', 'Flutter', 'Xamarin', 'Ionic', 'Cordova',
+
+    // Testing & Quality
+    'Jest', 'Mocha', 'Cypress', 'Selenium', 'JUnit', 'PyTest', 'TestNG',
+    'Cucumber', 'Postman', 'SonarQube', 'ESLint', 'Prettier',
+
+    // Other Technologies
+    'Linux', 'Windows', 'macOS', 'API', 'REST', 'GraphQL', 'Microservices',
+    'Agile', 'Scrum', 'Kanban', 'JIRA', 'Confluence', 'Slack', 'Teams',
+    'Figma', 'Sketch', 'Adobe Creative Suite', 'Unity', 'Unreal Engine'
   ]
 
   private skillVariations: Record<string, string[]> = {
-    'Python': ['python', 'PYTHON', 'Python3', 'Python 3', 'python3', 'py'],
-    'JavaScript': ['javascript', 'JAVASCRIPT', 'js', 'JS', 'Java Script', 'ECMAScript'],
-    'Node.js': ['nodejs', 'node js', 'node.js', 'NodeJS', 'NODE.JS', 'node'],
-    'React': ['react', 'REACT', 'ReactJS', 'React.js', 'react.js'],
-    'Vue': ['vue', 'VUE', 'Vue.js', 'vue.js', 'VueJS'],
-    'Angular': ['angular', 'ANGULAR', 'AngularJS', 'angular.js'],
-    'SQL': ['sql', 'SQL', 'Sql', 'structured query language'],
-    'Machine Learning': ['machine learning', 'ML', 'ml', 'machinelearning', 'machine-learning'],
-    'Deep Learning': ['deep learning', 'DL', 'dl', 'deeplearning', 'deep-learning'],
+    'Python': ['python', 'PYTHON', 'Python3', 'Python 3', 'python3', 'py', 'Python2'],
+    'JavaScript': ['javascript', 'JAVASCRIPT', 'js', 'JS', 'Java Script', 'ECMAScript', 'ES6', 'ES2015', 'ES2020'],
+    'TypeScript': ['typescript', 'TYPESCRIPT', 'ts', 'TS', 'Type Script'],
+    'Node.js': ['nodejs', 'node js', 'node.js', 'NodeJS', 'NODE.JS', 'node', 'Node'],
+    'React': ['react', 'REACT', 'ReactJS', 'React.js', 'react.js', 'React Native'],
+    'Vue': ['vue', 'VUE', 'Vue.js', 'vue.js', 'VueJS', 'Vuejs'],
+    'Angular': ['angular', 'ANGULAR', 'AngularJS', 'angular.js', 'Angular 2+', 'Angular2'],
+    'SQL': ['sql', 'SQL', 'Sql', 'structured query language', 'Structured Query Language'],
+    'Machine Learning': ['machine learning', 'ML', 'ml', 'machinelearning', 'machine-learning', 'Machine-Learning'],
+    'Deep Learning': ['deep learning', 'DL', 'dl', 'deeplearning', 'deep-learning', 'Deep-Learning'],
+    'C++': ['cpp', 'CPP', 'C plus plus', 'c++', 'C PLUS PLUS'],
+    'C#': ['csharp', 'CSharp', 'C Sharp', 'c#', 'C SHARP', 'dotnet', '.NET', 'dot net'],
+    'HTML': ['html', 'HTML', 'HTML5', 'html5', 'HyperText Markup Language'],
+    'CSS': ['css', 'CSS', 'CSS3', 'css3', 'Cascading Style Sheets'],
+    'AWS': ['aws', 'AWS', 'Amazon Web Services', 'amazon web services'],
+    'Azure': ['azure', 'AZURE', 'Microsoft Azure', 'microsoft azure'],
+    'GCP': ['gcp', 'GCP', 'Google Cloud Platform', 'google cloud platform', 'Google Cloud'],
+    'Docker': ['docker', 'DOCKER', 'containerization', 'containers'],
+    'Kubernetes': ['kubernetes', 'KUBERNETES', 'k8s', 'K8s', 'K8S', 'container orchestration'],
+    'Git': ['git', 'GIT', 'version control', 'source control', 'Version Control'],
+    'REST': ['rest', 'REST', 'RESTful', 'restful', 'REST API', 'RESTful API'],
+    'API': ['api', 'API', 'Application Programming Interface'],
+    'CI/CD': ['ci/cd', 'CI/CD', 'continuous integration', 'continuous deployment', 'CI CD'],
+    'TensorFlow': ['tensorflow', 'TENSORFLOW', 'TensorFlow', 'tensor flow'],
+    'PyTorch': ['pytorch', 'PYTORCH', 'PyTorch', 'py torch'],
+    'MongoDB': ['mongodb', 'MONGODB', 'mongo db', 'Mongo DB'],
+    'PostgreSQL': ['postgresql', 'POSTGRESQL', 'postgres', 'Postgres', 'PostGres'],
+    'MySQL': ['mysql', 'MYSQL', 'My SQL', 'my sql'],
     'Power BI': ['powerbi', 'power bi', 'POWER BI', 'PowerBI'],
     'C#': ['c#', 'C#', 'csharp', 'C-sharp', 'c sharp'],
     'C++': ['c++', 'C++', 'cpp', 'cplusplus', 'c plus plus']

@@ -1,0 +1,67 @@
+# JobFit.AI - Python Dependencies
+# Note: This is primarily a Node.js/TypeScript project, but these Python packages
+# could be useful for additional data processing or machine learning features
+
+# Core Data Science Libraries
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Natural Language Processing
+nltk>=3.8
+spacy>=3.6.0
+transformers>=4.30.0
+sentence-transformers>=2.2.0
+
+# PDF Processing (Alternative to Node.js pdf-parse)
+PyPDF2>=3.0.0
+pdfplumber>=0.9.0
+pymupdf>=1.23.0
+
+# Machine Learning & AI
+torch>=2.0.0
+tensorflow>=2.13.0
+openai>=1.0.0
+
+# Text Processing & Analysis
+textblob>=0.17.0
+fuzzywuzzy>=0.18.0
+python-levenshtein>=0.21.0
+
+# Web Framework (if adding Python backend)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# Database Connectivity
+psycopg2-binary>=2.9.0
+pymongo>=4.4.0
+sqlalchemy>=2.0.0
+
+# Data Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Resume Parsing Libraries
+pyresparser>=1.0.6
+resume-parser>=0.8.4
+
+# Optional: Advanced NLP Models
+# spacy-transformers>=1.2.0
+# en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0.tar.gz
+
+# Development & Testing
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Note: To install spaCy language model, run:
+# python -m spacy download en_core_web_sm

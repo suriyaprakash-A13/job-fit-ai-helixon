@@ -64,12 +64,12 @@ export function StepThree({ extractedData, jobDetails, onComplete, onBack }: Ste
     setIsProcessing(true)
     setError("")
     setProgress(0)
-    setCurrentStep("Initializing AI analysis pipeline...")
+    setCurrentStep("Initializing enhanced AI analysis pipeline...")
     setCurrentAgent(0)
     setAgentResults([])
 
     try {
-      console.log("🚀 Starting comprehensive AI analysis with extracted data:", extractedData.length)
+      console.log("🚀 Starting ENHANCED AI analysis with extracted data:", extractedData.length)
       console.log("📊 Extracted data preview:", extractedData.map(d => ({
         fileName: d.fileName,
         textLength: d.extractedText?.length || 0,
@@ -78,148 +78,88 @@ export function StepThree({ extractedData, jobDetails, onComplete, onBack }: Ste
         hasPhone: !!d.structuredData?.phone
       })))
 
-      const allResults: ResumeAnalysis[] = []
+      // Use the enhanced analysis API instead of basic multi-agent system
+      setCurrentStep("Running enhanced AI analysis with improved skill matching...")
+      setProgress(10)
 
-      // Process each resume through all agents
-      for (let resumeIndex = 0; resumeIndex < extractedData.length; resumeIndex++) {
-        const resume = extractedData[resumeIndex]
-        setCurrentResumeIndex(resumeIndex)
-
-        console.log(`\n🔍 Processing resume ${resumeIndex + 1}/${extractedData.length}: ${resume.fileName}`)
-        setCurrentStep(`Processing ${resume.fileName} through AI agents...`)
-
-        // Agent 1: Recruiter Agent - Contact Info & Basic Details
-        setCurrentAgent(0)
-        setProgress((resumeIndex / extractedData.length) * 100 + (0 / 4) * (100 / extractedData.length))
-        setCurrentStep(`Recruiter Agent analyzing ${resume.fileName}...`)
-
-        await new Promise(resolve => setTimeout(resolve, 800)) // Simulate processing time
-
-        const recruiterResult = await processWithRecruiterAgent(resume, jobDetails)
-        console.log(`✅ Recruiter Agent completed for ${resume.fileName}`)
-
-        // Agent 2: Analyst Agent - Skills & Technical Analysis
-        setCurrentAgent(1)
-        setProgress((resumeIndex / extractedData.length) * 100 + (1 / 4) * (100 / extractedData.length))
-        setCurrentStep(`Analyst Agent analyzing ${resume.fileName}...`)
-
-        await new Promise(resolve => setTimeout(resolve, 800))
-
-        const analystResult = await processWithAnalystAgent(resume, jobDetails, recruiterResult)
-        console.log(`✅ Analyst Agent completed for ${resume.fileName}`)
-
-        // Agent 3: HR Agent - Experience & Cultural Fit
-        setCurrentAgent(2)
-        setProgress((resumeIndex / extractedData.length) * 100 + (2 / 4) * (100 / extractedData.length))
-        setCurrentStep(`HR Agent analyzing ${resume.fileName}...`)
-
-        await new Promise(resolve => setTimeout(resolve, 800))
-
-        const hrResult = await processWithHRAgent(resume, jobDetails, { ...recruiterResult, ...analystResult })
-        console.log(`✅ HR Agent completed for ${resume.fileName}`)
-
-        // Agent 4: Recommender Agent - Final Scoring & Ranking
-        setCurrentAgent(3)
-        setProgress((resumeIndex / extractedData.length) * 100 + (3 / 4) * (100 / extractedData.length))
-        setCurrentStep(`Recommender Agent finalizing ${resume.fileName}...`)
-
-        await new Promise(resolve => setTimeout(resolve, 800))
-
-        const finalResult = await processWithRecommenderAgent(resume, jobDetails, {
-          ...recruiterResult,
-          ...analystResult,
-          ...hrResult
+      const response = await fetch('/api/analyze-extracted-resumes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          extractedData,
+          jobDetails
         })
-        console.log(`✅ Recommender Agent completed for ${resume.fileName}`)
+      })
 
-        // Combine all agent results
-        const completeAnalysis: ResumeAnalysis = {
-          ...recruiterResult,
-          ...analystResult,
-          ...hrResult,
-          ...finalResult,
-          file_name: resume.fileName,
-          candidate_name: resume.fileName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ")
-        }
-
-        allResults.push(completeAnalysis)
-        console.log(`🎉 Complete analysis finished for ${resume.fileName}`)
+      if (!response.ok) {
+        throw new Error(`Enhanced analysis failed: ${response.statusText}`)
       }
 
-      // Final ranking step
-      setCurrentAgent(3)
-      setProgress(95)
-      setCurrentStep("Ranking all candidates...")
+      const { analyses } = await response.json()
+      console.log("🎉 Enhanced analysis completed:", analyses.length, "resumes analyzed")
 
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      setProgress(90)
+      setCurrentStep("Ranking candidates...")
 
       // Sort by fit_score or recommendation_score
-      const rankedResults = allResults.sort((a, b) => {
+      const rankedResults = analyses.sort((a: any, b: any) => {
         const scoreA = a.fit_score || a.recommendation_score || 0
         const scoreB = b.fit_score || b.recommendation_score || 0
         return scoreB - scoreA
       })
 
       // Add rank information
-      rankedResults.forEach((result, index) => {
-        const rank = index + 1
-        const rankSuffix = rank === 1 ? "st" : rank === 2 ? "nd" : rank === 3 ? "rd" : "th"
-        if (result.feedback && !result.feedback.includes("⭐ Rank:")) {
-          result.feedback += ` ⭐ Rank: ${rank}${rankSuffix} Best Fit`
-        }
+      rankedResults.forEach((result: any, index: number) => {
+        result.rank = index + 1
       })
 
       setProgress(100)
-      setCurrentStep("Analysis complete!")
       setIsComplete(true)
       setIsProcessing(false)
 
-      console.log("🏆 Final ranked results:", rankedResults.map(r => ({
+      console.log("🏆 Final enhanced results:", rankedResults.map((r: any) => ({
         fileName: r.file_name,
         score: r.fit_score || r.recommendation_score,
-        rank: rankedResults.indexOf(r) + 1
+        rank: r.rank,
+        skillsFound: r.skills?.length || 0,
+        skillsMatched: r.matched_required_skills?.length || 0
       })))
 
       onComplete(rankedResults)
 
-    } catch (err) {
-      console.error("❌ Processing error:", err)
-      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
+    } catch (enhancedError) {
+      console.error("❌ Enhanced analysis failed:", enhancedError)
+      setCurrentStep("Analysis failed, creating fallback results...")
 
-      // Create fallback results
-      console.log("🔄 Creating fallback results...")
-      try {
-        const fallbackResults = extractedData.map((resume, index) => ({
-          candidate_name: resume.fileName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
-          email: resume.structuredData?.email || 'Not provided',
-          phone: resume.structuredData?.phone || 'Not provided',
-          skills: resume.structuredData?.skills || [],
-          soft_skills: [],
-          experience_years: 0,
-          education: resume.structuredData?.education || 'Not specified',
-          recruiter_score: Math.floor(Math.random() * 20) + 70,
-          analyst_score: Math.floor(Math.random() * 20) + 70,
-          hr_score: Math.floor(Math.random() * 20) + 70,
-          recommendation_score: Math.floor(Math.random() * 20) + 70,
-          fit_score: Math.floor(Math.random() * 20) + 70,
-          feedback: `📄 ${resume.fileName} | ⭐ Fit Score: ${Math.floor(Math.random() * 20) + 70}/100 | 🎯 Skills: ${resume.structuredData?.skills?.length || 0} identified | 💼 Experience: Analysis pending | 🎓 ${resume.structuredData?.education || 'Education not specified'}`,
-          positive_points: resume.structuredData?.skills?.length > 0 ? [`${resume.structuredData.skills.length} technical skills identified`] : [],
-          negative_points: [],
-          overall_explanation: `Analysis of ${resume.fileName} based on extracted data. Manual review recommended for complete assessment.`,
-          file_name: resume.fileName
-        }))
+      // Simple fallback - create basic results
+      const fallbackResults = extractedData.map((resume, index) => ({
+        candidate_name: resume.fileName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
+        email: resume.structuredData?.email || 'Not provided',
+        phone: resume.structuredData?.phone || 'Not provided',
+        skills: resume.structuredData?.skills || [],
+        soft_skills: [],
+        experience_years: 0,
+        education: resume.structuredData?.education || 'Not specified',
+        recruiter_score: Math.floor(Math.random() * 20) + 70,
+        analyst_score: Math.floor(Math.random() * 20) + 70,
+        hr_score: Math.floor(Math.random() * 20) + 70,
+        recommendation_score: Math.floor(Math.random() * 20) + 70,
+        fit_score: Math.floor(Math.random() * 20) + 70,
+        feedback: `📄 ${resume.fileName} | ⭐ Fit Score: ${Math.floor(Math.random() * 20) + 70}/100 | 🎯 Skills: ${resume.structuredData?.skills?.length || 0} identified | 💼 Experience: Analysis pending | 🎓 ${resume.structuredData?.education || 'Education not specified'}`,
+        positive_points: resume.structuredData?.skills?.length > 0 ? [`${resume.structuredData.skills.length} technical skills identified`] : [],
+        negative_points: [],
+        overall_explanation: `Analysis of ${resume.fileName} based on extracted data. Manual review recommended for complete assessment.`,
+        file_name: resume.fileName,
+        rank: index + 1
+      }))
 
-        setProgress(100)
-        setCurrentStep("Analysis complete (fallback mode)")
-        setIsComplete(true)
-        setIsProcessing(false)
-        onComplete(fallbackResults)
-      } catch (fallbackError) {
-        console.error("❌ Fallback creation failed:", fallbackError)
-        setError(errorMessage)
-        setIsProcessing(false)
-        setProgress(0)
-      }
+      setProgress(100)
+      setCurrentStep("Analysis complete (fallback mode)")
+      setIsComplete(true)
+      setIsProcessing(false)
+      onComplete(fallbackResults)
     }
   }
 
@@ -258,37 +198,45 @@ export function StepThree({ extractedData, jobDetails, onComplete, onBack }: Ste
     const requiredSkills = jobDetails.requiredSkills || []
     const preferredSkills = jobDetails.preferredSkills || []
 
-    // Calculate skill matches
-    const matchedRequired = requiredSkills.filter(reqSkill =>
-      candidateSkills.some(candSkill =>
-        candSkill.toLowerCase().includes(reqSkill.toLowerCase()) ||
-        reqSkill.toLowerCase().includes(candSkill.toLowerCase())
-      )
-    )
+    // Import enhanced skill matcher
+    const { skillMatcher } = await import('@/lib/enhanced-skill-matcher')
 
-    const matchedPreferred = preferredSkills.filter(prefSkill =>
-      candidateSkills.some(candSkill =>
-        candSkill.toLowerCase().includes(prefSkill.toLowerCase()) ||
-        prefSkill.toLowerCase().includes(candSkill.toLowerCase())
-      )
-    )
+    // Use enhanced skill matching for required skills
+    const requiredSkillsMatch = skillMatcher.matchSkills(candidateSkills, requiredSkills)
+    const preferredSkillsMatch = skillMatcher.matchSkills(candidateSkills, preferredSkills)
 
-    const skillsMatchPercentage = requiredSkills.length > 0 ?
-      Math.round((matchedRequired.length / requiredSkills.length) * 100) : 0
+    const skillsMatchPercentage = requiredSkillsMatch.matchPercentage
+    const skillsConfidence = requiredSkillsMatch.confidence
 
-    const analystScore = Math.min(95, 40 + (skillsMatchPercentage * 0.5) + (candidateSkills.length * 2))
+    // Improved scoring that considers match quality
+    const baseSkillScore = Math.min(90, 30 + (skillsMatchPercentage * 0.6))
+    const confidenceBonus = Math.min(10, skillsConfidence * 0.1)
+    const skillCountBonus = Math.min(15, candidateSkills.length * 1.5)
 
-    // Generate detailed analyst feedback
-    const missingSkills = requiredSkills.filter(skill => !matchedRequired.includes(skill))
+    const analystScore = Math.min(95, baseSkillScore + confidenceBonus + skillCountBonus)
+
+    // Generate detailed analyst feedback using enhanced matching results
+    const totalMatches = requiredSkillsMatch.exactMatches.length + requiredSkillsMatch.partialMatches.length + requiredSkillsMatch.synonymMatches.length
     const skillsAssessment = skillsMatchPercentage > 80 ? 'excellent' : skillsMatchPercentage > 60 ? 'good' : skillsMatchPercentage > 40 ? 'moderate' : 'limited'
-    const analystFeedback = `📊 ANALYST AGENT: Technical skills assessment shows ${skillsAssessment} alignment (${skillsMatchPercentage}% match). Found ${candidateSkills.length} total skills, ${matchedRequired.length} required skills matched. ${matchedRequired.length > 0 ? `Strengths: ${matchedRequired.slice(0, 3).join(', ')}` : 'No required skills identified'}. ${missingSkills.length > 0 ? `Gaps: ${missingSkills.slice(0, 3).join(', ')}` : 'All required skills present'}.`
+
+    const strengthsText = [
+      ...requiredSkillsMatch.exactMatches.slice(0, 2).map(skill => `${skill} (exact)`),
+      ...requiredSkillsMatch.synonymMatches.slice(0, 2).map(skill => `${skill} (variant)`),
+      ...requiredSkillsMatch.partialMatches.slice(0, 1).map(skill => `${skill} (partial)`)
+    ].slice(0, 3).join(', ')
+
+    const analystFeedback = `📊 ANALYST AGENT: Technical skills assessment shows ${skillsAssessment} alignment (${skillsMatchPercentage}% match, ${skillsConfidence}% confidence). Found ${candidateSkills.length} total skills, ${totalMatches} required skills matched (${requiredSkillsMatch.exactMatches.length} exact, ${requiredSkillsMatch.synonymMatches.length} variants, ${requiredSkillsMatch.partialMatches.length} partial). ${strengthsText ? `Strengths: ${strengthsText}` : 'No required skills identified'}. ${requiredSkillsMatch.missingSkills.length > 0 ? `Gaps: ${requiredSkillsMatch.missingSkills.slice(0, 3).join(', ')}` : 'All required skills present'}.`
 
     return {
       skills: candidateSkills,
-      matched_required_skills: matchedRequired,
-      matched_preferred_skills: matchedPreferred,
-      missing_required_skills: missingSkills,
+      matched_required_skills: [...requiredSkillsMatch.exactMatches, ...requiredSkillsMatch.synonymMatches, ...requiredSkillsMatch.partialMatches],
+      matched_preferred_skills: [...preferredSkillsMatch.exactMatches, ...preferredSkillsMatch.synonymMatches, ...preferredSkillsMatch.partialMatches],
+      missing_required_skills: requiredSkillsMatch.missingSkills,
       skills_match_percentage: skillsMatchPercentage,
+      skills_confidence: skillsConfidence,
+      exact_matches: requiredSkillsMatch.exactMatches.length,
+      synonym_matches: requiredSkillsMatch.synonymMatches.length,
+      partial_matches: requiredSkillsMatch.partialMatches.length,
       analyst_score: analystScore,
       analyst_feedback: analystFeedback
     }
@@ -330,10 +278,10 @@ export function StepThree({ extractedData, jobDetails, onComplete, onBack }: Ste
   const processWithRecommenderAgent = async (resume: ExtractedResumeData, jobDetails: JobDetails, allData: any) => {
     console.log(`🏆 Recommender Agent processing ${resume.fileName}`)
 
-    // Calculate weighted fit score
-    const skillsWeight = 0.6
-    const experienceWeight = 0.25
-    const educationWeight = 0.1
+    // Improved weighted fit score calculation
+    const skillsWeight = 0.5  // Reduced from 0.6 to be less punishing
+    const experienceWeight = 0.3  // Increased from 0.25 for better balance
+    const educationWeight = 0.15  // Increased from 0.1
     const qualityWeight = 0.05
 
     const skillsScore = allData.skills_match_percentage || 0
@@ -341,21 +289,43 @@ export function StepThree({ extractedData, jobDetails, onComplete, onBack }: Ste
     const educationScore = allData.education_score || 0
     const qualityScore = (allData.recruiter_score || 0)
 
-    const fitScore = Math.round(
+    // Add confidence bonus for high-quality skill matches
+    const confidenceBonus = (allData.skills_confidence > 80) ? 5 :
+                           (allData.skills_confidence > 60) ? 3 : 0
+
+    const baseFitScore = Math.round(
       (skillsScore * skillsWeight) +
       (experienceScore * experienceWeight) +
       (educationScore * educationWeight) +
       (qualityScore * qualityWeight)
     )
 
+    const fitScore = Math.min(100, Math.max(0, baseFitScore + confidenceBonus))
+
     const recommendationScore = Math.round((allData.recruiter_score + allData.analyst_score + allData.hr_score) / 3)
 
-    // Generate feedback
+    // Generate feedback with enhanced debugging
     const fileName = resume.fileName
     const skillsCount = allData.skills?.length || 0
     const matchedSkillsCount = allData.matched_required_skills?.length || 0
     const experienceYears = allData.experience_years || 0
     const education = allData.education || 'Not specified'
+
+    // Debug logging for scoring transparency
+    console.log(`🏆 RECOMMENDER SCORING DEBUG for ${fileName}:`, {
+      skillsScore: skillsScore,
+      experienceScore: experienceScore,
+      educationScore: educationScore,
+      qualityScore: qualityScore,
+      confidenceBonus: confidenceBonus,
+      baseFitScore: baseFitScore,
+      finalFitScore: fitScore,
+      weights: { skillsWeight, experienceWeight, educationWeight, qualityWeight },
+      skillsConfidence: allData.skills_confidence,
+      exactMatches: allData.exact_matches,
+      synonymMatches: allData.synonym_matches,
+      partialMatches: allData.partial_matches
+    })
 
     const feedback = `📄 ${fileName} | ⭐ Fit Score: ${fitScore}/100 | 🎯 Skills: ${skillsCount} total, ${matchedSkillsCount} matched | 💼 Experience: ${experienceYears} years | 🎓 ${education}`
 

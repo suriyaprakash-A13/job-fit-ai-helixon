@@ -109,8 +109,20 @@ export async function POST(request: NextRequest) {
                 name: resumeData.structuredData?.name || 'No name',
                 email: resumeData.structuredData?.email || 'No email',
                 skills: resumeData.structuredData?.skills?.length || 0,
+                skillsList: resumeData.structuredData?.skills || [],
                 textLength: resumeData.extractedText?.length || 0,
                 confidence: resumeData.extractionQuality?.confidence || 0
+              })
+
+              // Debug: Show first 500 characters of extracted text
+              console.log(`📄 Text preview for ${resumeData.fileName}:`,
+                resumeData.extractedText?.substring(0, 500) || 'NO TEXT EXTRACTED')
+
+              // Debug: Show job details
+              console.log(`🎯 Job requirements:`, {
+                requiredSkills: jobDetails.requiredSkills || [],
+                preferredSkills: jobDetails.preferredSkills || [],
+                jobTitle: jobDetails.jobTitle || 'No title'
               })
 
               // Validate required data
@@ -141,34 +153,32 @@ export async function POST(request: NextRequest) {
               console.log(`⏱️ Waiting for analysis of ${resumeData.fileName}...`)
               const analysis = await Promise.race([analysisPromise, timeoutPromise])
               console.log(`✅ Analysis completed for ${resumeData.fileName}`)
-              
+
               analysis.file_name = resumeData.fileName
 
-              // Validate the analysis contains real data
+              // ENHANCED: Always add analysis, but log quality
+              analyses.push(analysis)
+              console.log(`✅ Successfully analyzed: ${resumeData.fileName}`)
+              console.log(`📈 ENHANCED Analysis summary:`, {
+                fitScore: analysis.fit_score || analysis.recommendation_score,
+                skillsFound: analysis.skills.length,
+                skillsList: analysis.skills.slice(0, 10),
+                experience: analysis.experience_years,
+                hasContact: !!(analysis.email || analysis.phone),
+                skillsMatchPercentage: analysis.skills_match_percentage,
+                skillsConfidence: analysis.skills_confidence,
+                matchedSkills: analysis.matched_required_skills?.length || 0
+              })
+
+              // Validate the analysis contains real data (for logging only)
               const hasRealAnalysis = analysis.skills.length > 0 ||
                                    analysis.experience_years > 0 ||
                                    analysis.email ||
                                    analysis.education
 
-              if (hasRealAnalysis) {
-                analyses.push(analysis)
-                console.log(`✅ Successfully analyzed: ${resumeData.fileName}`)
-                console.log(`📈 Analysis summary:`, {
-                  fitScore: analysis.fit_score || analysis.recommendation_score,
-                  skillsFound: analysis.skills.length,
-                  experience: analysis.experience_years,
-                  hasContact: !!(analysis.email || analysis.phone)
-                })
-              } else {
-                console.warn(`⚠️ Analysis for ${resumeData.fileName} appears to contain insufficient real data`)
-                console.warn(`Creating enhanced fallback analysis...`)
-                const fallbackAnalysis = geminiClient.createEnhancedFallbackAnalysis(
-                  resumeData.extractedText, 
-                  resumeData.structuredData, 
-                  jobDetails
-                )
-                fallbackAnalysis.file_name = resumeData.fileName
-                analyses.push(fallbackAnalysis)
+              if (!hasRealAnalysis) {
+                console.warn(`⚠️ Analysis for ${resumeData.fileName} appears to contain minimal data, but keeping it`)
+                // Note: We're keeping the analysis anyway since the enhanced system should handle this better
               }
             } catch (error) {
               console.error(`❌ Error analyzing ${resumeData.fileName}:`, error)

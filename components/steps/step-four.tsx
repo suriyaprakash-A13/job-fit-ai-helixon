@@ -18,14 +18,29 @@ interface StepFourProps {
 }
 
 export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
+  // Sort results by final score (fit_score or recommendation_score) in descending order
+  const sortedResults = [...results].sort((a, b) => {
+    const scoreA = a.fit_score || a.recommendation_score || 0
+    const scoreB = b.fit_score || b.recommendation_score || 0
+    return scoreB - scoreA
+  })
+
   const [selectedCandidate, setSelectedCandidate] = useState<ResumeAnalysis | null>(
-    results.length > 0 ? results[0] : null,
+    sortedResults.length > 0 ? sortedResults[0] : null,
   )
   const [activeTab, setActiveTab] = useState("overview")
 
   // Calculate stats
-  const totalCandidates = results.length
-  const topCandidates = Math.min(results.length, 4)
+  const totalCandidates = sortedResults.length
+  const topCandidates = Math.min(sortedResults.length, 4)
+
+  // Calculate average score
+  const averageScore = sortedResults.length > 0
+    ? sortedResults.reduce((sum, candidate) => {
+        const score = candidate.fit_score || candidate.recommendation_score || 0
+        return sum + score
+      }, 0) / sortedResults.length
+    : 0
 
   const downloadResults = () => {
     const csv = [
@@ -33,20 +48,28 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
         "Rank",
         "PDF Resume",
         "Final Score",
+        "Fit Score",
         "Recruiter Score",
         "Analyst Score",
         "HR Score",
+        "Recommendation Score",
+        "Skills Match %",
+        "Experience Years",
         "Recommendation",
       ].join(","),
-      ...results.map((r, index) =>
+      ...sortedResults.map((r, index) =>
         [
           index + 1,
-          r.file_name || r.candidate_name,
-          r.recommendation_score,
-          r.recruiter_score,
-          r.analyst_score,
-          r.hr_score,
-          r.feedback,
+          `"${r.file_name || r.candidate_name}"`,
+          (r.fit_score || r.recommendation_score || 0).toFixed(1),
+          (r.fit_score || 0).toFixed(1),
+          r.recruiter_score || 0,
+          (r.analyst_score || 0).toFixed(1),
+          r.hr_score || 0,
+          r.recommendation_score || 0,
+          r.skills_match_percentage || 0,
+          r.experience_years || 0,
+          `"${r.feedback || 'No feedback available'}"`,
         ].join(","),
       ),
     ].join("\n")
@@ -72,7 +95,7 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
     return "bg-red-50 border-red-200"
   }
 
-  if (results.length === 0) {
+  if (sortedResults.length === 0) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">No Results Found</h2>
@@ -84,8 +107,8 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Enhanced Summary Stats */}
+      <div className="grid grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-4xl font-bold text-blue-600">{totalCandidates}</div>
@@ -94,8 +117,18 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-green-600">{topCandidates}</div>
-            <div className="text-sm text-gray-600 mt-1">Top Candidates</div>
+            <div className={`text-4xl font-bold ${getScoreColor(averageScore)}`}>
+              {averageScore.toFixed(1)}
+            </div>
+            <div className="text-sm text-gray-600 mt-1">Average Score</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="text-4xl font-bold text-green-600">
+              {sortedResults.length > 0 ? (sortedResults[0].fit_score || sortedResults[0].recommendation_score || 0).toFixed(1) : '0'}
+            </div>
+            <div className="text-sm text-gray-600 mt-1">Top Score</div>
           </CardContent>
         </Card>
         <Card>
@@ -108,6 +141,61 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
         </Card>
       </div>
 
+      {/* Ranking Summary */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-yellow-600" />
+            Final Rankings - Sorted by Score
+          </CardTitle>
+          <CardDescription>
+            Candidates ranked by their final fit scores (highest to lowest). Average score: {averageScore.toFixed(1)}/100
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {sortedResults.slice(0, 6).map((candidate, index) => {
+              const finalScore = candidate.fit_score || candidate.recommendation_score || 0
+              const medalEmoji = index === 0 ? "🏆" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`
+
+              return (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    index < 3 ? "bg-white border-yellow-200" : "bg-gray-50 border-gray-200"
+                  } hover:shadow-md`}
+                  onClick={() => setSelectedCandidate(candidate)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{medalEmoji}</span>
+                      <div>
+                        <div className="font-medium text-sm text-gray-900 truncate max-w-[120px]">
+                          {candidate.file_name || candidate.candidate_name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {candidate.skills?.length || 0} skills • {candidate.experience_years || 0} yrs exp
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${getScoreColor(finalScore)}`}>
+                        {finalScore.toFixed(1)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {sortedResults.length > 6 && (
+            <div className="text-center mt-4 text-sm text-gray-600">
+              ... and {sortedResults.length - 6} more candidates
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Candidate List */}
         <div className="lg:col-span-1">
@@ -119,35 +207,69 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {results.map((candidate, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedCandidate?.candidate_name === candidate.candidate_name
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  onClick={() => setSelectedCandidate(candidate)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
-                        #{index + 1}
+              {sortedResults.map((candidate, index) => {
+                const finalScore = candidate.fit_score || candidate.recommendation_score || 0
+                const rankBadgeColor = index === 0 ? "bg-yellow-100 text-yellow-800" :
+                                     index === 1 ? "bg-gray-100 text-gray-800" :
+                                     index === 2 ? "bg-orange-100 text-orange-800" :
+                                     "bg-blue-100 text-blue-600"
+
+                return (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedCandidate?.candidate_name === candidate.candidate_name ||
+                      selectedCandidate?.file_name === candidate.file_name
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => setSelectedCandidate(candidate)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${rankBadgeColor}`}>
+                          #{index + 1}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">{candidate.file_name || candidate.candidate_name}</div>
+                          <div className="text-xs text-gray-500">
+                            {index === 0 && "🏆 Top Candidate"}
+                            {index === 1 && "🥈 Runner-up"}
+                            {index === 2 && "🥉 Third Place"}
+                            {index > 2 && "PDF Resume"}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">{candidate.file_name || candidate.candidate_name}</div>
-                        <div className="text-xs text-gray-500">PDF Resume</div>
+                      <div className="text-right">
+                        <div className={`text-lg font-bold ${getScoreColor(finalScore)}`}>
+                          {finalScore.toFixed(1)}
+                        </div>
+                        <div className="text-xs text-gray-500">Final Score</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className={`text-lg font-bold ${getScoreColor(candidate.fit_score || candidate.recommendation_score)}`}>
-                        {(candidate.fit_score || candidate.recommendation_score).toFixed(1)}
+                    {/* Score breakdown mini-bar */}
+                    <div className="mt-2">
+                      <div className="flex gap-1 h-2">
+                        <div
+                          className="bg-blue-400 rounded-sm"
+                          style={{ width: `${(candidate.recruiter_score || 0)}%` }}
+                          title={`Recruiter: ${candidate.recruiter_score || 0}`}
+                        />
+                        <div
+                          className="bg-green-400 rounded-sm"
+                          style={{ width: `${(candidate.analyst_score || 0)}%` }}
+                          title={`Analyst: ${(candidate.analyst_score || 0).toFixed(1)}`}
+                        />
+                        <div
+                          className="bg-purple-400 rounded-sm"
+                          style={{ width: `${(candidate.hr_score || 0)}%` }}
+                          title={`HR: ${candidate.hr_score || 0}`}
+                        />
                       </div>
-                      <div className="text-xs text-gray-500">Fit Score</div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </CardContent>
           </Card>
         </div>
@@ -535,14 +657,28 @@ export function StepFour({ results, jobDetails, onBack }: StepFourProps) {
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-between pt-6">
+      {/* Enhanced Navigation & Summary */}
+      <div className="flex justify-between items-center pt-6">
         <Button variant="outline" onClick={onBack} size="lg">
           ← Start New Analysis
         </Button>
         <div className="text-center">
-          <div className="text-green-600 font-semibold">✅ Analysis Complete</div>
-          <div className="text-sm text-gray-600">Top {topCandidates} candidates identified</div>
+          <div className="text-green-600 font-semibold text-lg">✅ Analysis Complete</div>
+          <div className="text-sm text-gray-600 mt-1">
+            {totalCandidates} candidates analyzed • Average score: {averageScore.toFixed(1)}/100
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Top candidate: {sortedResults.length > 0 ? (sortedResults[0].file_name || sortedResults[0].candidate_name) : 'N/A'}
+            ({sortedResults.length > 0 ? (sortedResults[0].fit_score || sortedResults[0].recommendation_score || 0).toFixed(1) : '0'}/100)
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-gray-600">
+            Results sorted by final score
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Powered by Enhanced AI Analysis
+          </div>
         </div>
       </div>
     </div>

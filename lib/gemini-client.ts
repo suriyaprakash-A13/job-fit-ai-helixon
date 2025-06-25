@@ -195,7 +195,7 @@ class GeminiClient {
         console.error("Error stack:", error.stack)
       }
       console.log("🔄 Using enhanced fallback analysis...")
-      return this.createEnhancedFallbackAnalysis(resumeText, extractedData, jobDetails)
+      return await this.createEnhancedFallbackAnalysis(resumeText, extractedData, jobDetails)
     }
   }
 
@@ -545,7 +545,7 @@ Return ONLY a valid JSON object with this EXACT structure:
     }
   }
 
-  createEnhancedFallbackAnalysis(resumeText: string, extractedData?: any, jobDetails?: any): ResumeAnalysis {
+  async createEnhancedFallbackAnalysis(resumeText: string, extractedData?: any, jobDetails?: any): Promise<ResumeAnalysis> {
     console.log("🔄 Creating enhanced fallback analysis with REAL extracted data only...")
 
     // Always prioritize filename over extracted name to avoid PDF artifacts
@@ -565,12 +565,20 @@ Return ONLY a valid JSON object with this EXACT structure:
     const email = extractedData?.email || emailFromText
     const phone = extractedData?.phone || phoneFromText
 
-    // CRITICAL: If extracted data has no skills, try to extract directly from text
+    // CRITICAL: Always try multiple skill extraction methods
     let skills = extractedData?.skills || []
-    if (skills.length === 0 && resumeText) {
-      console.log("🔍 No skills in extracted data, attempting direct text extraction...")
-      skills = this.extractSkillsFromText(resumeText)
-      console.log(`📋 Direct extraction found ${skills.length} skills: ${skills.slice(0, 5).join(', ')}`)
+    console.log(`🔍 Initial skills from extracted data: ${skills.length} skills`)
+
+    // Always try direct text extraction as well
+    if (resumeText && resumeText.length > 100) {
+      console.log("🔍 Attempting direct text extraction...")
+      const directSkills = this.extractSkillsFromText(resumeText)
+      console.log(`📋 Direct extraction found ${directSkills.length} skills: ${directSkills.slice(0, 5).join(', ')}`)
+
+      // Merge skills, avoiding duplicates
+      const allSkills = [...new Set([...skills, ...directSkills])]
+      skills = allSkills
+      console.log(`📋 Combined skills: ${skills.length} total skills`)
     }
 
     // Also try to extract other data directly if missing
@@ -594,67 +602,148 @@ Return ONLY a valid JSON object with this EXACT structure:
     const certifications = extractedData?.certifications || []
     const keyAchievements = extractedData?.keyAchievements || []
 
-    // Calculate realistic scores based on ACTUAL extracted data
+    // Enhanced data quality assessment with fallback extraction
     const hasContactInfo = !!(email || phone)
-    const hasSkills = skills.length > 0
-    const hasExperience = experienceYears > 0
+    let hasSkills = skills.length > 0
+    let hasExperience = experienceYears > 0
     const hasEducation = !!education
 
-    console.log(`📊 Fallback data quality check:`, {
+    // Fallback skill extraction if no skills found
+    if (!hasSkills && resumeText.length > 100) {
+      console.log(`⚠️ No skills found, attempting fallback extraction...`)
+      try {
+        const { BulletproofSkillExtractor } = await import('./bulletproof-skill-extractor')
+        const fallbackExtractor = new BulletproofSkillExtractor()
+        const fallbackResult = fallbackExtractor.extract(resumeText)
+
+        if (fallbackResult.skills.length > 0) {
+          skills = fallbackResult.skills
+          hasSkills = true
+          console.log(`🛡️ Fallback extraction found ${skills.length} skills: ${skills.slice(0, 5).join(', ')}`)
+        }
+      } catch (error) {
+        console.error('Fallback skill extraction failed:', error)
+      }
+    }
+
+    // Fallback experience extraction if none found
+    if (!hasExperience && resumeText.length > 100) {
+      console.log(`⚠️ No experience found, attempting fallback extraction...`)
+      const experiencePatterns = [
+        /(\d+)\s*(?:\+)?\s*years?\s+(?:of\s+)?(?:experience|exp)/gi,
+        /experience[:\s]*(\d+)\s*(?:\+)?\s*years?/gi,
+        /(\d+)\s*(?:\+)?\s*yrs?\s+(?:experience|exp)/gi,
+        /worked\s+for\s+(\d+)\s*(?:\+)?\s*years?/gi
+      ]
+
+      for (const pattern of experiencePatterns) {
+        const matches = resumeText.match(pattern)
+        if (matches && matches.length > 0) {
+          const yearMatch = matches[0].match(/\d+/)
+          if (yearMatch) {
+            experienceYears = parseInt(yearMatch[0])
+            hasExperience = true
+            console.log(`🛡️ Fallback found ${experienceYears} years of experience`)
+            break
+          }
+        }
+      }
+    }
+
+    console.log(`📊 Enhanced data quality check:`, {
       hasContactInfo,
       hasSkills,
       skillsCount: skills.length,
       hasExperience,
       experienceYears,
       hasEducation,
-      education: education.substring(0, 50)
+      education: education?.substring(0, 50) || 'None'
     })
 
-    // More conservative scoring - only give high scores if we have real data
-    const skillsScore = hasSkills ? Math.min(85, 40 + (skills.length * 3)) : 20
-    const experienceScore = hasExperience ? Math.min(85, 40 + (experienceYears * 2)) : 20
+    // FIXED: Much more generous scoring with higher baselines
+    const skillsScore = hasSkills ? Math.min(95, 60 + (skills.length * 3)) : 45
+    const experienceScore = hasExperience ? Math.min(95, 60 + (experienceYears * 4)) : 45
     const educationScore = hasEducation ?
-      (education.toLowerCase().includes('master') ? 80 :
-       education.toLowerCase().includes('bachelor') ? 70 : 60) : 30
-    const qualityScore = hasContactInfo ? 75 : 40
+      (education.toLowerCase().includes('master') ? 90 :
+       education.toLowerCase().includes('bachelor') ? 80 :
+       education.toLowerCase().includes('associate') ? 70 : 60) : 50
+    const qualityScore = hasContactInfo ? 85 : 55
 
-    const baseScore = Math.round((skillsScore + experienceScore + educationScore + qualityScore) / 4)
+    // Calculate base score with minimum floor
+    const rawBaseScore = Math.round((skillsScore + experienceScore + educationScore + qualityScore) / 4)
+    const baseScore = Math.max(50, rawBaseScore) // Minimum score of 50
 
-    // Perform skill matching with job requirements if available
+    // Debug logging for scoring transparency
+    console.log(`📊 GEMINI SCORING DEBUG for ${candidateName}:`, {
+      baseScoreComponents: {
+        skillsScore: skillsScore,
+        experienceScore: experienceScore,
+        educationScore: educationScore,
+        qualityScore: qualityScore
+      },
+      dataQuality: {
+        hasSkills,
+        hasExperience,
+        hasEducation,
+        hasContactInfo,
+        skillsCount: skills.length,
+        experienceYears
+      },
+      baseScore: baseScore
+    })
+
+    // Perform enhanced skill matching with job requirements if available
     let matchedRequiredSkills: string[] = []
     let matchedPreferredSkills: string[] = []
     let missingRequiredSkills: string[] = []
     let skillsMatchPercentage = 0
+    let skillsConfidence = 0
 
     if (jobDetails && jobDetails.requiredSkills && Array.isArray(jobDetails.requiredSkills)) {
-      const requiredSkills = jobDetails.requiredSkills.map((skill: string) => skill.toLowerCase())
-      const candidateSkills = skills.map((skill: string) => skill.toLowerCase())
+      try {
+        // Use enhanced skill matcher
+        const { skillMatcher } = await import('./enhanced-skill-matcher')
+        const requiredMatch = skillMatcher.matchSkills(skills, jobDetails.requiredSkills)
 
-      matchedRequiredSkills = jobDetails.requiredSkills.filter((reqSkill: string) =>
-        candidateSkills.includes(reqSkill.toLowerCase())
-      )
+        matchedRequiredSkills = [...requiredMatch.exactMatches, ...requiredMatch.synonymMatches, ...requiredMatch.partialMatches]
+        missingRequiredSkills = requiredMatch.missingSkills
+        skillsMatchPercentage = requiredMatch.matchPercentage
+        skillsConfidence = requiredMatch.confidence
 
-      missingRequiredSkills = jobDetails.requiredSkills.filter((reqSkill: string) =>
-        !candidateSkills.includes(reqSkill.toLowerCase())
-      )
+        console.log(`🎯 Enhanced skill matching results:`, {
+          requiredSkills: jobDetails.requiredSkills,
+          candidateSkills: skills,
+          exactMatches: requiredMatch.exactMatches,
+          synonymMatches: requiredMatch.synonymMatches,
+          partialMatches: requiredMatch.partialMatches,
+          missingRequired: missingRequiredSkills,
+          matchPercentage: skillsMatchPercentage,
+          confidence: skillsConfidence
+        })
 
-      skillsMatchPercentage = requiredSkills.length > 0 ?
-        Math.round((matchedRequiredSkills.length / requiredSkills.length) * 100) : 0
+        // Enhanced preferred skills matching
+        if (jobDetails.preferredSkills && Array.isArray(jobDetails.preferredSkills)) {
+          const preferredMatch = skillMatcher.matchSkills(skills, jobDetails.preferredSkills)
+          matchedPreferredSkills = [...preferredMatch.exactMatches, ...preferredMatch.synonymMatches, ...preferredMatch.partialMatches]
+        }
+      } catch (error) {
+        console.error('Enhanced skill matching failed, falling back to basic matching:', error)
+        // Fallback to basic matching
+        const requiredSkills = jobDetails.requiredSkills.map((skill: string) => skill.toLowerCase())
+        const candidateSkills = skills.map((skill: string) => skill.toLowerCase())
 
-      console.log(`🎯 Skill matching results:`, {
-        requiredSkills: jobDetails.requiredSkills,
-        candidateSkills: skills,
-        matchedRequired: matchedRequiredSkills,
-        missingRequired: missingRequiredSkills,
-        matchPercentage: skillsMatchPercentage
-      })
-    }
+        matchedRequiredSkills = jobDetails.requiredSkills.filter((reqSkill: string) =>
+          candidateSkills.includes(reqSkill.toLowerCase())
+        )
 
-    if (jobDetails && jobDetails.preferredSkills && Array.isArray(jobDetails.preferredSkills)) {
-      const candidateSkills = skills.map((skill: string) => skill.toLowerCase())
-      matchedPreferredSkills = jobDetails.preferredSkills.filter((prefSkill: string) =>
-        candidateSkills.includes(prefSkill.toLowerCase())
-      )
+        missingRequiredSkills = jobDetails.requiredSkills.filter((reqSkill: string) =>
+          !candidateSkills.includes(reqSkill.toLowerCase())
+        )
+
+        skillsMatchPercentage = requiredSkills.length > 0 ?
+          Math.round((matchedRequiredSkills.length / requiredSkills.length) * 100) : 0
+        skillsConfidence = skillsMatchPercentage
+      }
     }
 
     // Create realistic feedback based on actual data availability
@@ -686,12 +775,13 @@ Return ONLY a valid JSON object with this EXACT structure:
       matched_preferred_skills: matchedPreferredSkills,
       missing_required_skills: missingRequiredSkills,
       recruiter_score: baseScore,
-      analyst_score: Math.max(0, Math.min(100, baseScore - 3)), // More conservative
-      hr_score: Math.max(0, Math.min(100, baseScore - 1)), // Slightly lower than base
+      analyst_score: Math.max(0, Math.min(100, baseScore + (skillsConfidence > 70 ? 5 : 0))), // Bonus for high confidence
+      hr_score: Math.max(0, Math.min(100, baseScore + (experienceYears > 3 ? 3 : 0))), // Bonus for experience
       recommendation_score: baseScore,
-      fit_score: baseScore,
-      skills_match_percentage: skillsMatchPercentage, // Use actual skill matching percentage
-      experience_relevance_score: hasExperience ? Math.min(80, experienceYears * 8) : 0,
+      fit_score: Math.max(0, Math.min(100, baseScore + (skillsMatchPercentage > 60 ? 5 : 0))), // Bonus for good skill match
+      skills_match_percentage: skillsMatchPercentage, // Use enhanced skill matching percentage
+      skills_confidence: skillsConfidence, // Add confidence score
+      experience_relevance_score: hasExperience ? Math.min(85, 40 + (experienceYears * 6)) : 0,
       education_score: educationScore,
       resume_quality_score: qualityScore,
       feedback: `📄 ${candidateName} | ⭐ Fit Score: ${baseScore}/100 | 🎯 Skills: ${skills.length} identified | 💼 Experience: ${experienceYears} years | 🎓 ${education || 'Not specified'} | ${statusEmoji} ${statusText} | 📊 Data Quality: ${dataQuality}`,
@@ -724,9 +814,9 @@ Return ONLY a valid JSON object with this EXACT structure:
     }
   }
 
-  createFallbackAnalysis(resumeText: string, extractedData?: any, jobDetails?: any): ResumeAnalysis {
+  async createFallbackAnalysis(resumeText: string, extractedData?: any, jobDetails?: any): Promise<ResumeAnalysis> {
     console.log("Creating basic fallback analysis...")
-    return this.createEnhancedFallbackAnalysis(resumeText, extractedData, jobDetails)
+    return await this.createEnhancedFallbackAnalysis(resumeText, extractedData, jobDetails)
   }
 
   // Helper method to extract skills directly from text
