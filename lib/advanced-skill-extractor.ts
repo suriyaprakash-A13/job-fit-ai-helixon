@@ -3,70 +3,24 @@
  * This system uses multiple specialized agents to extract skills more accurately
  */
 
-// Temporary inline agents until extraction-agents.ts is fixed
-interface ExtractionAgent {
-  name: string
-  extract: (text: string, context?: any) => Promise<string[]>
-  confidence: number
-}
-
-class PatternBasedAgent implements ExtractionAgent {
-  name = "Pattern-Based Agent"
-  confidence = 0.7
-
-  async extract(text: string): Promise<string[]> {
-    const skills = new Set<string>()
-    const skillKeywords = [
-      'JavaScript', 'Python', 'Java', 'C#', 'C++', 'React', 'Angular', 'Vue.js',
-      'Node.js', 'Django', 'Flask', 'HTML', 'CSS', 'SQL', 'MongoDB', 'PostgreSQL',
-      'AWS', 'Azure', 'Docker', 'Kubernetes', 'Git', 'Machine Learning', 'AI'
-    ]
-
-    skillKeywords.forEach(skill => {
-      if (text.toLowerCase().includes(skill.toLowerCase())) {
-        skills.add(skill)
-      }
-    })
-
-    return Array.from(skills)
-  }
-}
-
-class ContextualAgent implements ExtractionAgent {
-  name = "Contextual Agent"
-  confidence = 0.8
-
-  async extract(text: string): Promise<string[]> {
-    return []
-  }
-}
-
-class SemanticAgent implements ExtractionAgent {
-  name = "Semantic Agent"
-  confidence = 0.9
-
-  async extract(text: string): Promise<string[]> {
-    return []
-  }
-}
-
-class InferenceAgent implements ExtractionAgent {
-  name = "Inference Agent"
-  confidence = 0.6
-
-  async extract(text: string): Promise<string[]> {
-    return []
-  }
-}
-
-class ValidationAgent implements ExtractionAgent {
-  name = "Validation Agent"
-  confidence = 0.8
-
-  async extract(text: string): Promise<string[]> {
-    return []
-  }
-}
+<<<<<<< HEAD
+import {
+  PatternBasedAgent,
+  ContextualAgent,
+  SemanticAgent,
+  InferenceAgent,
+  ValidationAgent,
+  type ExtractionAgent
+=======
+import { 
+  PatternBasedAgent, 
+  ContextualAgent, 
+  SemanticAgent, 
+  InferenceAgent, 
+  ValidationAgent,
+  type ExtractionAgent 
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
+} from './extraction-agents'
 import { BulletproofSkillExtractor } from './bulletproof-skill-extractor'
 
 interface SkillExtractionResult {
@@ -130,6 +84,11 @@ class AdvancedSkillExtractor {
 
     // Consensus and validation phase
     const consensusSkills = this.buildConsensus(results, confidenceScores)
+<<<<<<< HEAD
+
+=======
+    
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     // Enhanced fallback system
     let finalSkills = consensusSkills
     if (consensusSkills.length === 0) {
@@ -142,11 +101,21 @@ class AdvancedSkillExtractor {
       console.log("⚠️ Few skills found, enhancing with bulletproof extractor...")
       const bulletproofExtractor = new BulletproofSkillExtractor()
       const bulletproofResult = bulletproofExtractor.extract(resumeText)
+<<<<<<< HEAD
+
+=======
+      
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       // Merge results, avoiding duplicates
       const enhancedSkills = new Set([...consensusSkills, ...bulletproofResult.skills])
       finalSkills = Array.from(enhancedSkills)
       console.log(`🔧 Enhanced from ${consensusSkills.length} to ${finalSkills.length} skills`)
     }
+<<<<<<< HEAD
+
+=======
+    
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     // Categorize skills
     const categorizedSkills = this.categorizeSkills(finalSkills)
     
@@ -154,7 +123,11 @@ class AdvancedSkillExtractor {
     const overallConfidence = this.calculateOverallConfidence(agentResults)
 
     // Extract additional metadata
+<<<<<<< HEAD
+    const detailedAnalysis = await this.performDetailedAnalysis(resumeText, consensusSkills)
+=======
     const detailedAnalysis = await this.performDetailedAnalysis(resumeText, finalSkills)
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
 
     console.log(`🎯 Advanced extraction complete: ${finalSkills.length} skills with ${overallConfidence}% confidence`)
 
@@ -181,6 +154,11 @@ class AdvancedSkillExtractor {
       const confidence = confidenceScores[agentName] || 0
       console.log(`📊 ${agentName}: ${skills.length} skills, confidence: ${confidence}`)
       console.log(`   Skills: ${skills.join(', ')}`)
+<<<<<<< HEAD
+
+=======
+      
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
       skills.forEach(skill => {
         const normalizedSkill = this.normalizeSkill(skill)
         if (!skillVotes[normalizedSkill]) {
@@ -335,6 +313,11 @@ class AdvancedSkillExtractor {
   private emergencyFallback(text: string): string[] {
     console.log("🚨 Emergency fallback: Using simple regex extraction...")
     const skills = new Set<string>()
+<<<<<<< HEAD
+
+=======
+    
+>>>>>>> 37c3e38d7e9453b24cd55858a6bb58dc2f43f1ff
     // Most common skills that should always be detected
     const criticalSkills = [
       'Python', 'JavaScript', 'Java', 'C#', 'C++', 'PHP', 'Ruby', 'Go', 'TypeScript',
