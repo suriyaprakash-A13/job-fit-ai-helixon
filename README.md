@@ -1,4 +1,6 @@
-# JobFit.AI 🤖
+# JobFit.AI
+
+> **Latest Update**: Fixed deployment issues and updated project structure - All features working correctly! 🤖
 
 **Intelligent Resume Screening & Candidate Matching Platform**
 
