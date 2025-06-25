@@ -46,7 +46,7 @@ class AdvancedSkillExtractor {
   private geminiApiKey: string
 
   constructor() {
-    this.geminiApiKey = "AIzaSyCgaFzMltN282Qq0PF0oG6eGzayQciLWNs"
+    this.geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY || ""
     this.skillDatabase = new SkillDatabase()
     this.agents = [
       new PatternBasedAgent(),

@@ -1,6 +1,6 @@
 // Simple test to verify Gemini API connectivity
 async function testGeminiAPI() {
-  const apiKey = "AIzaSyCgaFzMltN282Qq0PF0oG6eGzayQciLWNs";
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY || "your_api_key_here";
   const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
 
   const requestBody = {
